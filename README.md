@@ -1,5 +1,7 @@
 # LinTO client
 
+LinTO Client-server connectivity
+
 This module sequences actions, dispatches informations or triggers between any other modules on the LinTO device
 This module is part of the LinTO project, it's the only remote subscriber/publisher, through MQTT(s) protocol, to the LinTO business-logic and exploitation servers.
 
