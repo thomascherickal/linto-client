@@ -79,7 +79,7 @@ function logicMqttEvents(app) {
             app.localmqtt.publish("say", {
                 "value": payload.value,
                 "on": new Date().toJSON()
-            }, false, true)
+            }, 0, false, true)
         }
 
         // Meetinf record management
