@@ -13,14 +13,13 @@ function localMqttEvents(app) {
     app.localmqtt.on("localmqtt::utterance/stop", async (payload) => {
         if (payload.reason === "canceled" || payload.reason === "timeout") return
         const audioStream = app.audio.mic.readStream()
+        // Notify for new request beign sent
+        app.localmqtt.publish("request/send", {
+            "on": new Date().toJSON()
+        }, 0, false, true)
         const audioRequestID = await app.logicmqtt.publishaudio(audioStream, app.conversationData)
         debug("conversationData reset")
         app.conversationData = {}
-        // Notify for new request beign sent
-        app.localmqtt.publish("request/send", {
-            "on": new Date().toJSON(),
-            "requestId": audioRequestID
-        }, 0, false, true)
         app.audio.nlpProcessing.push(audioRequestID)
     })
 }
