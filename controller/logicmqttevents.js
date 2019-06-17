@@ -40,7 +40,7 @@ function logicMqttEvents(app) {
                     await app.terminal.save() // dumps linto.json down to disk
                     app.logicmqtt.publishStatus()
                 } else {
-                    console.error("Unsupported TTS value")
+                    console.error("Error while trying to update volume")
                 }
             } catch (e) {
                 console.error(e)
@@ -49,13 +49,24 @@ function logicMqttEvents(app) {
 
         if (!!payload.topicArray && payload.topicArray[3] === "startreversessh") {
             try {
-                await startReverseSsh(payload.remoteHost, payload.remoteSSHPort, payload.mySSHPort, payload.remoteUser)
+                await startReverseSsh(payload.remoteHost, payload.remoteSSHPort, payload.mySSHPort, payload.remoteUser, payload.privateKey)
                 app.logicmqtt.publish("startreversessh", { "reversesshstatus": "ok" }, 0, false, true)
             } catch (e) {
                 console.error(e)
-                app.logicmqtt.publish('startreversessh', { "reversesshstatus": "ko" }, 0, false, true)
+                app.logicmqtt.publish('startreversessh', { "status": e.message }, 0, false, true)
             }
         }
+
+        if (!!payload.topicArray && payload.topicArray[3] === "shellexec") {
+            try {
+                let ret = await shellExec(payload.cmd)
+                app.logicmqtt.publish("shellexec", { "stdout": ret.stdout, "stderr": ret.stderr }, 0, false, true)
+            } catch (e) {
+                console.error(e.err)
+                app.logicmqtt.publish('shellexec', { "status": e.message }, 0, false, true)
+            }
+        }
+
 
         if (!!payload.topicArray && payload.topicArray[3] === "tts_lang" && !!payload.value) {
             try {
@@ -176,14 +187,14 @@ function logicMqttEvents(app) {
     })
 }
 
-function startReverseSsh(remoteHost, remoteSSHPort, mySSHPort = 22, remoteUser) {
-    console.log(`${new Date().toJSON()} Starting reverse SHH :`, remoteHost, remoteSSHPort, mySSHPort, remoteUser)
+function startReverseSsh(remoteHost, remoteSSHPort, mySSHPort = 22, remoteUser, privateKey) {
+    console.log(`${new Date().toJSON()} Starting reverse SHH :`, remoteHost, remoteSSHPort, mySSHPort, remoteUser, privateKey)
     mySSHPort = parseInt(mySSHPort)
     remoteSSHPort = parseInt(remoteSSHPort)
     return new Promise((resolve, reject) => {
         //MUST SET UP SSH KEY FOR THIS TO WORK
         //WARNING !!! OMAGAD !!!
-        let cmd = `ssh -o StrictHostKeyChecking=no -NR ${remoteSSHPort}:localhost:${mySSHPort} ${remoteUser}@${remoteHost}`
+        let cmd = `ssh -o StrictHostKeyChecking=no -NR ${remoteSSHPort}:localhost:${mySSHPort} ${remoteUser}@${remoteHost} -i ${privateKey}`
         let proc = exec(cmd, function (err, stdout, stderr) {
             if (stderr) console.error(`${new Date().toJSON()} ${stderr}`)
             if (err) return reject(err)
@@ -192,6 +203,18 @@ function startReverseSsh(remoteHost, remoteSSHPort, mySSHPort = 22, remoteUser) 
     })
 }
 
+//execute arbitrary shell command
+function shellExec(cmd) {
+    return new Promise((resolve, reject) => {
+        var proc = exec(cmd, function (err, stdout, stderr) {
+            if (err) reject(err)
+            var ret = {}
+            ret.stdout = stdout
+            ret.stderr = stderr
+            resolve(ret)
+        })
+    })
+}
 
 
 module.exports = logicMqttEvents
