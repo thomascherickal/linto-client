@@ -9,11 +9,10 @@
   "author": "",
   "license": "Affero General Public License v3",
   "dependencies": {
-    "ajv": "^6.10.0",
     "debug": "^3.1.0",
     "dotenv": "^6.0.0",
     "eventemitter3": "^3.1.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.11",
     "mqtt": "^2.18.1",
     "network": "^0.4.1",
     "ora": "^2.1.0",

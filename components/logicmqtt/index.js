@@ -2,17 +2,13 @@ const moduleName = 'logicmqtt'
 const debug = require('debug')(`linto-client:${moduleName}`)
 const EventEmitter = require('eventemitter3')
 const Mqtt = require('mqtt')
-const ajv = require("ajv")
+const stream = require('stream')
 
-// Connects this LinTO instance to a remote MQTT server
-// Remote connexion information are configured in "lib/terminal/linto.json" under                 
-//                  app.terminal.info.config.mqtt.host,
-//                  app.terminal.info.config.mqtt.port
+
+
 class LogicMqtt extends EventEmitter {
     constructor(app) {
         super()
-        // JSON Schema validated with AJV for incoming messages format (protocol)
-        // Only validated messages would get emitted to the controllers
         this.app = app
         this.pubTopicRoot = `${app.terminal.info.config.mqtt.scope}/${app.terminal.info.config.mqtt.frommetopic}/${app.terminal.info.sn}`
         this.subTopic = `${app.terminal.info.config.mqtt.scope}/${app.terminal.info.config.mqtt.towardsmetopic}/${app.terminal.info.sn}/#`
@@ -80,13 +76,11 @@ class LogicMqtt extends EventEmitter {
 
             this.client.on('message', (topic, payload) => {
                 try {
-                    // Format of a received message :
-                    // {clientScope}/{towardsmetopic}/{serialNumber}/{command}
-                    // exemple : blk/tolinto/blkYYMMDD001xxxxx/startreversessh
-                    const topicArray = topic.split("/")
-                    let toValidate = JSON.parse(payload.toString())
-                    toValidate.command = topicArray[3]
-
+                    let topicArray = topic.split("/")
+                    payload = JSON.parse(payload.toString())
+                    payload = Object.assign(payload, {
+                        topicArray
+                    })
                     this.emit(`${moduleName}::message`, payload)
                 } catch (err) {
                     debug(err)

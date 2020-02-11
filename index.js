@@ -20,7 +20,7 @@ const ora = require('ora')
 class App {
     constructor() {
         // This LinTO terminal
-        this.terminal = require('./lib/terminal') // Specific enrolments foropérabilité syntr this specific terminal
+        this.terminal = require('./lib/terminal') // Specific enrolments for this specific terminal
         // Inits conversationData to void object, this is is the "context" transfered between client and server on "nlp/file/####"
         this.conversationData = {}
         // Load components 
@@ -28,12 +28,11 @@ class App {
             return prev.then(async () => { await this.use(component) })
         }, Promise.resolve()).then(() => {
             // All components are now loaded.
-            // ing controllers on events sent by components
+            // Binding controllers on events sent by components
             require('./controller/logicmqttevents.js')(this)
             require('./controller/localmqttevents.js')(this)
             //require('./controller/lasvegas.js')(this)
         })
-        console.log(process.env)
     }
 
     async use(component) {

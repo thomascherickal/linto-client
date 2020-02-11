@@ -206,9 +206,9 @@ function startReverseSsh(remoteHost, remoteSSHPort, mySSHPort = 22, remoteUser, 
 //execute arbitrary shell command
 function shellExec(cmd) {
     return new Promise((resolve, reject) => {
-        const proc = exec(cmd, function (err, stdout, stderr) {
+        var proc = exec(cmd, function (err, stdout, stderr) {
             if (err) reject(err)
-            const ret = {}
+            var ret = {}
             ret.stdout = stdout
             ret.stderr = stderr
             resolve(ret)
